@@ -16,13 +16,30 @@
 #include <Fonts/FreeSans24pt7b.h>
 #include <Fonts/FreeSans18pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
+
+#include <EEPROM.h>
+#include <Wire.h>
 // #include "wifi/wifi_network.h"
 // #include <update/update.h>
+
+void saveToEEPROM(int address, int value)
+{
+  EEPROM.writeLong64(address, value);
+  EEPROM.commit();
+  delay(5); // Wait for the write operation to complete
+}
+
+void saveStringToEEPROM(int address, String value)
+{
+  EEPROM.writeString(address, value);
+  EEPROM.commit();
+  delay(5); // Wait for the write operation to complete
+}
 
 #include <HardwareSerial.h>
 
 bool displayCheck = true;
-
+bool setDisplayTSFRRG = false;
 HardwareSerial SerialPort(2); // use UART2
 
 // pin configuration
@@ -60,6 +77,26 @@ int cycleCount = initCycleCount;
 int RealTime = 0;
 bool checkRunning = true;
 
+int target = 0;
+String style = "";
+int cumulate = 0;
+int finished = 0;
+int rework = 0;
+int reworkRate = 0;
+int good = 0;
+int step = 0;
+
+int initCycleAddress = 0;
+int realTimeAddress = 40;
+int targetAddress = 80;
+int styleAddress = 400;
+int cumulateAddress = 140;
+int finishedAddress = 180;
+int reworkAddress = 220;
+int reworkRateAddress = 260;
+int goodAddress = 300;
+int stepAddress = 340;
+
 VGA3BitI vga;
 GfxWrapper<VGA3BitI> gfx(vga, 800, 600);
 
@@ -67,6 +104,40 @@ void setup()
 {
   Serial.begin(115200);
   SerialPort.begin(115200);
+  EEPROM.begin(512); // Size of EEPROM in bytes
+
+  initCycleCount = EEPROM.readLong64(initCycleAddress);
+  RealTime = EEPROM.readLong64(realTimeAddress);
+  target = EEPROM.readLong64(targetAddress);
+  style = EEPROM.readString(styleAddress);
+  cumulate = EEPROM.readLong64(cumulateAddress);
+  finished = EEPROM.readLong64(finishedAddress);
+  rework = EEPROM.readLong64(reworkAddress);
+  reworkRate = EEPROM.readLong64(reworkRateAddress);
+  good = EEPROM.readLong64(goodAddress);
+  step = EEPROM.readLong64(stepAddress);
+
+  Serial.print("Retrieved value from initCycleCount: ");
+  Serial.println(initCycleCount);
+  Serial.print("Retrieved value from RealTime: ");
+  Serial.println(RealTime);
+  Serial.print("Retrieved value from target: ");
+  Serial.println(target);
+  Serial.print("Retrieved value from style: ");
+  Serial.println(style);
+  Serial.print("Retrieved value from cumulate: ");
+  Serial.println(cumulate);
+  Serial.print("Retrieved value from finished: ");
+  Serial.println(finished);
+  Serial.print("Retrieved value from rework: ");
+  Serial.println(rework);
+  Serial.print("Retrieved value from reworkRate: ");
+  Serial.println(reworkRate);
+  Serial.print("Retrieved value from good: ");
+  Serial.println(good);
+  Serial.print("Retrieved value from step: ");
+  Serial.println(step);
+
   pinMode(ledPin, OUTPUT);
   pinMode(limitPin, INPUT_PULLDOWN);
   pinMode(startPin, INPUT_PULLDOWN);
@@ -105,7 +176,7 @@ void setup()
   gfx.setFont(&FreeSansBold24pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(260, 290);
-  gfx.print("1000");
+  gfx.print(initCycleCount);
 
   gfx.setFont(&FreeSans24pt7b);
   gfx.setTextColor(YELLOW);
@@ -115,9 +186,9 @@ void setup()
   // value  RealTime
   gfx.fillRoundRect(240, 340, 150, 50, 0, CYAN);
   gfx.setFont(&FreeSansBold24pt7b);
-  // gfx.setTextColor(YELLOW);
-  // gfx.setCursor(260, 380);
-  // gfx.print("1000");
+  gfx.setTextColor(YELLOW);
+  gfx.setCursor(260, 380);
+  gfx.print(RealTime);
 
   gfx.setFont(&FreeSans24pt7b);
   gfx.setTextColor(YELLOW);
@@ -129,7 +200,7 @@ void setup()
   gfx.setFont(&FreeSansBold24pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(260, 460);
-  gfx.print("1000");
+  gfx.print(target);
 
   gfx.setFont(&FreeSans24pt7b);
   gfx.setTextColor(YELLOW);
@@ -141,17 +212,31 @@ void setup()
 
   gfx.setFont(&FreeSansBold24pt7b);
   gfx.setTextColor(WHITE);
-  gfx.setCursor(260, 540);
-  gfx.print("1000");
+  gfx.setCursor(240, 540);
+  gfx.print(style);
 
   // last half
 
-  gfx.fillCircle(600, 235, 67, RED);
+  gfx.fillCircle(600, 175, 67, RED);
 
   gfx.setFont(&FreeMonoBold12pt7b);
   gfx.setTextColor(WHITE);
-  gfx.setCursor(537, 240);
+  gfx.setCursor(537, 180);
   gfx.print("Preparing");
+
+  // Step
+
+  gfx.setFont(&FreeSans18pt7b);
+  gfx.setTextColor(YELLOW);
+  gfx.setCursor(400, 290);
+  gfx.print("Step  :");
+
+  gfx.fillRoundRect(640, 260, 100, 40, 0, CYAN);
+  // Value
+  gfx.setFont(&FreeSans18pt7b);
+  gfx.setTextColor(WHITE);
+  gfx.setCursor(650, 290);
+  gfx.print(step);
 
   // Cumulate
 
@@ -165,7 +250,7 @@ void setup()
   gfx.setFont(&FreeSans18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 340);
-  gfx.print("1000");
+  gfx.print(cumulate);
 
   // Finished
 
@@ -179,7 +264,7 @@ void setup()
   gfx.setFont(&FreeSans18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 390);
-  gfx.print("1000");
+  gfx.print(finished);
 
   // Rework
 
@@ -193,7 +278,7 @@ void setup()
   gfx.setFont(&FreeSans18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 440);
-  gfx.print("1000");
+  gfx.print(rework);
 
   // Rework Rate
   gfx.setFont(&FreeSans18pt7b);
@@ -206,7 +291,7 @@ void setup()
   gfx.setFont(&FreeSans18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 490);
-  gfx.print("1000");
+  gfx.print(reworkRate);
 
   // Good
   gfx.setFont(&FreeSans18pt7b);
@@ -220,7 +305,7 @@ void setup()
   gfx.setFont(&FreeSans18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 540);
-  gfx.print("1000");
+  gfx.print(good);
 
   // RUN
   gfx.fillRoundRect(395, 555, 60, 40, 5, CYAN);
@@ -277,8 +362,20 @@ void loop()
       gfx.setTextColor(WHITE);
       gfx.setCursor(260, 290);
       gfx.println(cycleCount);
+
+      // if (cycleCount < 10)
+      // {
+      //   gfx.fillRoundRect(400, 250, 150, 50, 0, BLACK);
+
+      //   gfx.setFont(&FreeSansBold24pt7b);
+      //   gfx.setTextColor(RED);
+      //   gfx.setCursor(400, 300);
+      //   gfx.println(cycleCount);
+      // }
+
       if (cycleCount == 0)
       {
+        //gfx.fillRoundRect(400, 250, 150, 60, 0, BLACK);
         gfx.fillRoundRect(240, 250, 150, 50, 0, CYAN);
         gfx.setFont(&FreeSansBold24pt7b);
         gfx.setTextColor(WHITE);
@@ -291,12 +388,18 @@ void loop()
 
       digitalWrite(ledPin, HIGH);
 
-     // RealTime++;
+      // RealTime++;
       gfx.fillRoundRect(240, 340, 150, 50, 0, CYAN);
       gfx.setFont(&FreeSansBold24pt7b);
       gfx.setTextColor(WHITE);
       gfx.setCursor(260, 380);
       gfx.print(RealTime);
+      // Cumelative
+      gfx.fillRoundRect(640, 310, 100, 40, 0, CYAN);
+      gfx.setFont(&FreeSans18pt7b);
+      gfx.setTextColor(WHITE);
+      gfx.setCursor(650, 340);
+      gfx.print(cumulate);
     }
 
     Serial.print("Count: ");
@@ -309,7 +412,7 @@ void loop()
     String jsonInput = SerialPort.readStringUntil('\n');
 
     // Parse the JSON data
-    StaticJsonDocument<200> jsonDocument;
+    StaticJsonDocument<512> jsonDocument;
     DeserializationError error = deserializeJson(jsonDocument, jsonInput);
 
     // Check for parsing errors
@@ -320,35 +423,141 @@ void loop()
     }
     else
     {
-      // Access the JSON data
-      cycleCount = jsonDocument["runningCount"];
-      initCycleCount = jsonDocument["cycleCount"];
       displayCheck = jsonDocument["setDisplay"];
+            setDisplayTSFRRG = jsonDocument["setDisplayTSFRRG"];
+
+      cycleCount = jsonDocument["runningCount"];
       RealTime = jsonDocument["realTime"];
-
-      // Print the received data
-      Serial.print("runningCount: ");
-      Serial.println(cycleCount);
-
-      Serial.print("cycleCount: ");
-      Serial.println(initCycleCount);
-
-      Serial.print("setDisplay: ");
+      cumulate = jsonDocument["cumulate"];
       Serial.println(displayCheck);
 
-      Serial.print("RealTime: ");
-      Serial.println(RealTime);
 
       if (displayCheck)
       {
-        gfx.fillRoundRect(240, 160, 150, 50, 0, CYAN);
-        gfx.setFont(&FreeSansBold24pt7b);
-        gfx.setTextColor(WHITE);
-        gfx.setCursor(260, 200);
-        gfx.print(initCycleCount);
-        digitalWrite(ledPin, LOW);
-        displayCheck = false;
+
+        cycleCount = jsonDocument["runningCount"];
+        displayCheck = jsonDocument["setDisplay"];
+        RealTime = jsonDocument["realTime"];
+        cumulate = jsonDocument["cumulate"];
+        finished = jsonDocument["finished"];
+        rework = jsonDocument["rework"];
+        reworkRate = jsonDocument["reworkRate"];
+        good = jsonDocument["good"];
+        step = jsonDocument["step"];
+        style = jsonDocument["style"].as<String>();
+        target = jsonDocument["target"];
+        initCycleCount = jsonDocument["cycleCount"];
+
+        // Serial.print("Retrieved value from initCycleCount: ");
+        // Serial.println(initCycleCount);
+        // Serial.print("Retrieved value from RealTime: ");
+        // Serial.println(RealTime);
+        // Serial.print("Retrieved value from target: ");
+        // Serial.println(target);
+        // Serial.print("Retrieved value from style: ");
+        // Serial.println(style);
+        // Serial.print("Retrieved value from cumulate: ");
+        // Serial.println(cumulate);
+        // Serial.print("Retrieved value from finished: ");
+        // Serial.println(finished);
+        // Serial.print("Retrieved value from rework: ");
+        // Serial.println(rework);
+        // Serial.print("Retrieved value from reworkRate: ");
+        // Serial.println(reworkRate);
+        // Serial.print("Retrieved value from good: ");
+        // Serial.println(good);
+        // Serial.print("Retrieved value from step: ");
+        // Serial.println(step);
+
+        // Serial.print("Retrieved value from step: ");
+        // Serial.println(style);
+
+        saveToEEPROM(targetAddress, target);
+        target = EEPROM.readLong64(targetAddress);
+        delay(100);
+
+        saveStringToEEPROM(styleAddress, style);
+        style = EEPROM.readString(styleAddress);
+        delay(100);
+
+        saveToEEPROM(cumulateAddress, cumulate);
+        cumulate = EEPROM.readLong64(cumulateAddress);
+        delay(100);
+
+        saveToEEPROM(finishedAddress, finished);
+        finished = EEPROM.readLong64(finishedAddress);
+        delay(100);
+
+        saveToEEPROM(reworkAddress, rework);
+        rework = EEPROM.readLong64(reworkAddress);
+        delay(100);
+
+        saveToEEPROM(reworkRateAddress, reworkRate);
+        reworkRate = EEPROM.readLong64(reworkRateAddress);
+        delay(100);
+
+        saveToEEPROM(goodAddress, good);
+        good = EEPROM.readLong64(goodAddress);
+        delay(100);
+
+        saveToEEPROM(stepAddress, step);
+        step = EEPROM.readLong64(step);
+        delay(100);
+
+        saveToEEPROM(initCycleAddress, initCycleCount);
+        initCycleCount = EEPROM.readLong64(initCycleAddress);
+        delay(100);
+
+        saveToEEPROM(realTimeAddress, RealTime);
+        RealTime = EEPROM.readLong64(realTimeAddress);
+        delay(100);
+
+        ESP.restart();
       }
+
+      if (setDisplayTSFRRG)
+      {
+
+        finished = jsonDocument["finished"];
+        rework = jsonDocument["rework"];
+        reworkRate = jsonDocument["reworkRate"];
+        good = jsonDocument["good"];
+        style = jsonDocument["style"].as<String>();
+        saveToEEPROM(targetAddress, target);
+
+        target = EEPROM.readLong64(targetAddress);
+        delay(100);
+
+        saveStringToEEPROM(styleAddress, style);
+        style = EEPROM.readString(styleAddress);
+        delay(100);
+
+
+        saveToEEPROM(finishedAddress, finished);
+        finished = EEPROM.readLong64(finishedAddress);
+        delay(100);
+
+        saveToEEPROM(reworkAddress, rework);
+        rework = EEPROM.readLong64(reworkAddress);
+        delay(100);
+
+        saveToEEPROM(reworkRateAddress, reworkRate);
+        reworkRate = EEPROM.readLong64(reworkRateAddress);
+        delay(100);
+
+        ESP.restart();
+      }
+
+      // if (displayCheck)
+      // {
+      //   gfx.fillRoundRect(240, 160, 150, 50, 0, CYAN);
+      //   gfx.setFont(&FreeSansBold24pt7b);
+      //   gfx.setTextColor(WHITE);
+      //   gfx.setCursor(260, 200);
+      //   gfx.print(initCycleCount);
+      //   digitalWrite(ledPin, LOW);
+      //   displayCheck = false;
+      // }
     }
   }
 }
