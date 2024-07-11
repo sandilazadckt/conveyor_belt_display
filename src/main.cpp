@@ -16,6 +16,8 @@
 #include <Fonts/FreeSans24pt7b.h>
 #include <Fonts/FreeSans18pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeSansBold18pt7b.h>
+String deviceModel = "CB-0014";
 
 #include <EEPROM.h>
 #include <Wire.h>
@@ -46,8 +48,11 @@ HardwareSerial SerialPort(2); // use UART2
 const int redPins = 14;
 const int greenPins = 19;
 const int bluePins = 27;
-const int hsyncPin = 33;
-const int vsyncPin = 32;
+// const int hsyncPin = 33;
+// const int vsyncPin = 32;
+
+const int hsyncPin = 32;
+const int vsyncPin = 33;
 
 // const int redPins[] = {14};
 // const int greenPins[] = {19};
@@ -62,7 +67,8 @@ const int vsyncPin = 32;
 #define CYAN 0x07E0 // 0x07FF
 #define MAGENTA 0xF81F
 #define YELLOW 0xFFE0
-#define WHITE 0xFFFF
+#define WHITE 0x0000 // 0xFFFF
+#define WHI 0xFFFF
 
 const int ledPin = 2;   // Built-in LED on GPIO 2
 const int limitPin = 5; // Built-in LED on GPIO 2
@@ -208,21 +214,27 @@ void setup()
   gfx.print("Style :");
 
   // value  Style
-  gfx.fillRoundRect(240, 500, 150, 50, 0, CYAN);
+  // gfx.fillRoundRect(240, 500, 150, 50, 0, CYAN);
+  // gfx.setFont(&FreeSansBold24pt7b);
+  // gfx.setTextColor(WHITE);
+  // gfx.setCursor(240, 540);
+  // gfx.print(style);
 
+
+  gfx.fillRoundRect(190, 490, 200, 60, 0, CYAN);
   gfx.setFont(&FreeSansBold24pt7b);
   gfx.setTextColor(WHITE);
-  gfx.setCursor(240, 540);
+  gfx.setCursor(200, 540);
   gfx.print(style);
 
   // last half
 
   gfx.fillCircle(600, 175, 67, RED);
 
-  gfx.setFont(&FreeMonoBold12pt7b);
+  gfx.setFont(&FreeSansBold24pt7b);
   gfx.setTextColor(WHITE);
-  gfx.setCursor(537, 180);
-  gfx.print("Preparing");
+  gfx.setCursor(536, 190);
+  gfx.print("STOP");
 
   // Step
 
@@ -233,7 +245,7 @@ void setup()
 
   gfx.fillRoundRect(640, 260, 100, 40, 0, CYAN);
   // Value
-  gfx.setFont(&FreeSans18pt7b);
+  gfx.setFont(&FreeSansBold18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 290);
   gfx.print(step);
@@ -247,7 +259,7 @@ void setup()
 
   gfx.fillRoundRect(640, 310, 100, 40, 0, CYAN);
   // Value
-  gfx.setFont(&FreeSans18pt7b);
+  gfx.setFont(&FreeSansBold18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 340);
   gfx.print(cumulate);
@@ -261,7 +273,7 @@ void setup()
 
   gfx.fillRoundRect(640, 360, 100, 40, 0, CYAN);
   // Value
-  gfx.setFont(&FreeSans18pt7b);
+  gfx.setFont(&FreeSansBold18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 390);
   gfx.print(finished);
@@ -275,7 +287,7 @@ void setup()
 
   gfx.fillRoundRect(640, 410, 100, 40, 0, CYAN);
   // Value
-  gfx.setFont(&FreeSans18pt7b);
+  gfx.setFont(&FreeSansBold18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 440);
   gfx.print(rework);
@@ -288,7 +300,7 @@ void setup()
 
   gfx.fillRoundRect(640, 460, 100, 40, 0, CYAN);
   // Value
-  gfx.setFont(&FreeSans18pt7b);
+  gfx.setFont(&FreeSansBold18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 490);
   gfx.print(reworkRate);
@@ -302,38 +314,38 @@ void setup()
   // value
   gfx.fillRoundRect(640, 510, 100, 40, 0, CYAN);
 
-  gfx.setFont(&FreeSans18pt7b);
+  gfx.setFont(&FreeSansBold18pt7b);
   gfx.setTextColor(WHITE);
   gfx.setCursor(650, 540);
   gfx.print(good);
 
   // RUN
-  gfx.fillRoundRect(395, 555, 60, 40, 5, CYAN);
-  gfx.setFont(&FreeMonoBold12pt7b);
-  gfx.setTextColor(BLACK);
-  gfx.setCursor(400, 580);
-  gfx.print("RUN");
+  // gfx.fillRoundRect(395, 555, 60, 40, 5, CYAN);
+  // gfx.setFont(&FreeMonoBold12pt7b);
+  // gfx.setTextColor(BLACK);
+  // gfx.setCursor(400, 580);
+  // gfx.print("RUN");
 
-  // options
-  gfx.fillRoundRect(465, 555, 110, 40, 5, CYAN);
-  gfx.setFont(&FreeMonoBold12pt7b);
-  gfx.setTextColor(BLACK);
-  gfx.setCursor(470, 580);
-  gfx.print("Options");
+  // // options
+  // gfx.fillRoundRect(465, 555, 110, 40, 5, CYAN);
+  // gfx.setFont(&FreeMonoBold12pt7b);
+  // gfx.setTextColor(BLACK);
+  // gfx.setCursor(470, 580);
+  // gfx.print("Options");
 
   // System
-  gfx.fillRoundRect(590, 555, 100, 40, 5, CYAN);
+  gfx.fillRoundRect(590, 555, 140, 40, 5, CYAN);
   gfx.setFont(&FreeMonoBold12pt7b);
   gfx.setTextColor(BLACK);
   gfx.setCursor(600, 580);
-  gfx.print("System");
+  gfx.print("D_ID:");
 
   // Report
   gfx.fillRoundRect(695, 555, 90, 40, 5, CYAN);
   gfx.setFont(&FreeMonoBold12pt7b);
   gfx.setTextColor(BLACK);
-  gfx.setCursor(700, 580);
-  gfx.print("Report");
+  gfx.setCursor(670, 580);
+  gfx.print(deviceModel);
 
   delay(2000);
 }
@@ -349,62 +361,6 @@ int cursorY = 340;
 void loop()
 {
 
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillis >= interval)
-  {
-    previousMillis = currentMillis;
-
-    if (cycleCount > -1)
-    {
-      gfx.fillRoundRect(240, 250, 150, 50, 0, CYAN);
-      gfx.setFont(&FreeSansBold24pt7b);
-      gfx.setTextColor(WHITE);
-      gfx.setCursor(260, 290);
-      gfx.println(cycleCount);
-
-      // if (cycleCount < 10)
-      // {
-      //   gfx.fillRoundRect(400, 250, 150, 50, 0, BLACK);
-
-      //   gfx.setFont(&FreeSansBold24pt7b);
-      //   gfx.setTextColor(RED);
-      //   gfx.setCursor(400, 300);
-      //   gfx.println(cycleCount);
-      // }
-
-      if (cycleCount == 0)
-      {
-        //gfx.fillRoundRect(400, 250, 150, 60, 0, BLACK);
-        gfx.fillRoundRect(240, 250, 150, 50, 0, CYAN);
-        gfx.setFont(&FreeSansBold24pt7b);
-        gfx.setTextColor(WHITE);
-        gfx.setCursor(260, 290);
-        gfx.println(initCycleCount);
-      }
-    }
-    if (cycleCount == 0)
-    {
-
-      digitalWrite(ledPin, HIGH);
-
-      // RealTime++;
-      gfx.fillRoundRect(240, 340, 150, 50, 0, CYAN);
-      gfx.setFont(&FreeSansBold24pt7b);
-      gfx.setTextColor(WHITE);
-      gfx.setCursor(260, 380);
-      gfx.print(RealTime);
-      // Cumelative
-      gfx.fillRoundRect(640, 310, 100, 40, 0, CYAN);
-      gfx.setFont(&FreeSans18pt7b);
-      gfx.setTextColor(WHITE);
-      gfx.setCursor(650, 340);
-      gfx.print(cumulate);
-    }
-
-    Serial.print("Count: ");
-    Serial.println(cycleCount);
-  }
 
   if (SerialPort.available() > 0)
   {
@@ -424,14 +380,119 @@ void loop()
     else
     {
       displayCheck = jsonDocument["setDisplay"];
-            setDisplayTSFRRG = jsonDocument["setDisplayTSFRRG"];
-
+      setDisplayTSFRRG = jsonDocument["setDisplayTSFRRG"];
       cycleCount = jsonDocument["runningCount"];
       RealTime = jsonDocument["realTime"];
       cumulate = jsonDocument["cumulate"];
-      Serial.println(displayCheck);
+      String start = jsonDocument["start"];
+      String stop = jsonDocument["stop"];
+      String stopTime = jsonDocument["stopTime"].as<String>();
+      String date_time = jsonDocument["date_time"].as<String>();
+      String stopCheck = jsonDocument["stopCheck"];
+
+      Serial.println(date_time);
+
+      if (start == "Start")
+      {
+        gfx.fillCircle(600, 175, 67, GREEN);
+
+        gfx.setFont(&FreeSansBold24pt7b);
+        gfx.setTextColor(WHITE);
+        gfx.setCursor(547, 190);
+        gfx.print("RUN");
+
+        gfx.setFont(&FreeSansBold18pt7b);
+
+        gfx.setTextColor(WHI);
+        gfx.setCursor(300, 50);
+        gfx.print("STOP TIME");
+
+        gfx.fillRect(540, 15, 160, 40, RED);
+        gfx.setFont(&FreeSansBold24pt7b);
+        gfx.setTextColor(WHI);
+        gfx.setCursor(590, 50);
+        gfx.print(stopTime);
+      }
 
 
+      // if (stopCheck == "1")
+      // {
+      //   gfx.setTextColor(WHI);
+      //   gfx.setCursor(300, 50);
+      //   gfx.print("STOP TIME");
+      //   gfx.fillRect(540, 15, 160, 40, RED);
+      //   gfx.setFont(&FreeSansBold24pt7b);
+      //   gfx.setTextColor(WHI);
+      //   gfx.setCursor(590, 50);
+      //   gfx.print(stopTime);
+      // }
+
+      if (stop == "stop")
+      {
+        gfx.fillCircle(600, 175, 67, RED);
+        gfx.setFont(&FreeSansBold24pt7b);
+        gfx.setTextColor(WHITE);
+        gfx.setCursor(536, 190);
+        gfx.print("STOP");
+      }
+
+      if (!(date_time == "null"))
+      {
+        gfx.fillRect(5, 70, 500, 30, WHITE);
+
+        gfx.setFont(&FreeMonoBold12pt7b);
+        gfx.setTextColor(WHI);
+        gfx.setCursor(10, 90);
+        gfx.print(date_time);
+      }
+      /// addd
+      if (RealTime)
+      {
+        // RealTime++;
+        gfx.fillRoundRect(240, 340, 150, 50, 0, CYAN);
+        gfx.setFont(&FreeSansBold24pt7b);
+        gfx.setTextColor(WHITE);
+        gfx.setCursor(260, 380);
+        gfx.print(RealTime);
+        // Cumelative
+        gfx.fillRoundRect(640, 310, 100, 40, 0, CYAN);
+        gfx.setFont(&FreeSans18pt7b);
+        gfx.setTextColor(WHITE);
+        gfx.setCursor(650, 340);
+        gfx.print(cumulate);
+      }
+      if ((date_time == "null"))
+      {
+        if (cycleCount > -1)
+        {
+          gfx.fillRoundRect(240, 250, 150, 50, 0, CYAN);
+          gfx.setFont(&FreeSansBold24pt7b);
+          gfx.setTextColor(WHITE);
+          gfx.setCursor(260, 290);
+          gfx.println(cycleCount);
+
+          // if (cycleCount < 10)
+          // {
+          //   gfx.fillRoundRect(400, 250, 150, 50, 0, BLACK);
+
+          //   gfx.setFont(&FreeSansBold24pt7b);
+          //   gfx.setTextColor(RED);
+          //   gfx.setCursor(400, 300);
+          //   gfx.println(cycleCount);
+          // }
+
+          if (cycleCount == 0)
+          {
+            // gfx.fillRoundRect(400, 250, 150, 60, 0, BLACK);
+            gfx.fillRoundRect(240, 250, 150, 50, 0, CYAN);
+            gfx.setFont(&FreeSansBold24pt7b);
+            gfx.setTextColor(WHITE);
+            gfx.setCursor(260, 290);
+            gfx.println(initCycleCount);
+          }
+        }
+      }
+      /// addd
       if (displayCheck)
       {
 
@@ -448,30 +509,7 @@ void loop()
         target = jsonDocument["target"];
         initCycleCount = jsonDocument["cycleCount"];
 
-        // Serial.print("Retrieved value from initCycleCount: ");
-        // Serial.println(initCycleCount);
-        // Serial.print("Retrieved value from RealTime: ");
-        // Serial.println(RealTime);
-        // Serial.print("Retrieved value from target: ");
-        // Serial.println(target);
-        // Serial.print("Retrieved value from style: ");
-        // Serial.println(style);
-        // Serial.print("Retrieved value from cumulate: ");
-        // Serial.println(cumulate);
-        // Serial.print("Retrieved value from finished: ");
-        // Serial.println(finished);
-        // Serial.print("Retrieved value from rework: ");
-        // Serial.println(rework);
-        // Serial.print("Retrieved value from reworkRate: ");
-        // Serial.println(reworkRate);
-        // Serial.print("Retrieved value from good: ");
-        // Serial.println(good);
-        // Serial.print("Retrieved value from step: ");
-        // Serial.println(step);
-
-        // Serial.print("Retrieved value from step: ");
-        // Serial.println(style);
-
+  
         saveToEEPROM(targetAddress, target);
         target = EEPROM.readLong64(targetAddress);
         delay(100);
@@ -532,7 +570,6 @@ void loop()
         style = EEPROM.readString(styleAddress);
         delay(100);
 
-
         saveToEEPROM(finishedAddress, finished);
         finished = EEPROM.readLong64(finishedAddress);
         delay(100);
@@ -561,3 +598,7 @@ void loop()
     }
   }
 }
+
+
+
+
